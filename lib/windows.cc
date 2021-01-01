@@ -362,6 +362,40 @@ Napi::Boolean isWindowVisible (const Napi::CallbackInfo& info) {
     return Napi::Boolean::New (env, IsWindowVisible (handle));
 }
 
+
+Napi::Boolean isAltTabWindow (const Napi::CallbackInfo& info) {
+    Napi::Env env{ info.Env () };
+
+    auto hwnd{ getValueFromCallbackData<HWND> (info, 0) };
+
+	TITLEBARINFO ti;
+	HWND hwndTry, hwndWalk = NULL;
+
+	if(!IsWindowVisible(hwnd))
+		return Napi::Boolean::New (env, FALSE);
+
+	hwndTry = GetAncestor(hwnd, GA_ROOTOWNER);
+	while(hwndTry != hwndWalk) 
+	{
+		hwndWalk = hwndTry;
+		hwndTry = GetLastActivePopup(hwndWalk);
+		if(IsWindowVisible(hwndTry)) 
+			break;
+	}
+	if(hwndWalk != hwnd)
+		return Napi::Boolean::New (env, FALSE);
+
+	// the following removes some task tray programs and "Program Manager"
+	ti.cbSize = sizeof(ti);
+	GetTitleBarInfo(hwnd, &ti);
+	if(ti.rgstate[0] & STATE_SYSTEM_INVISIBLE)
+		return Napi::Boolean::New (env, FALSE);
+
+	return Napi::Boolean::New (env, TRUE);
+}
+
+
+
 Napi::Object getMonitorInfo (const Napi::CallbackInfo& info) {
     Napi::Env env{ info.Env () };
 
@@ -405,6 +439,7 @@ Napi::Object Init (Napi::Env env, Napi::Object exports) {
     exports.Set (Napi::String::New (env, "redrawWindow"), Napi::Function::New (env, redrawWindow));
     exports.Set (Napi::String::New (env, "isWindow"), Napi::Function::New (env, isWindow));
     exports.Set (Napi::String::New (env, "isWindowVisible"), Napi::Function::New (env, isWindowVisible));
+    exports.Set (Napi::String::New (env, "isAltTabWindow"), Napi::Function::New (env, isAltTabWindow));
     exports.Set (Napi::String::New (env, "setWindowOpacity"), Napi::Function::New (env, setWindowOpacity));
     exports.Set (Napi::String::New (env, "toggleWindowTransparency"),
                  Napi::Function::New (env, toggleWindowTransparency));

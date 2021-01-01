@@ -135,6 +135,11 @@ export class Window {
     return addon.isWindowVisible(this.id);
   }
 
+  isAltTabWindow(): boolean {
+    if (!addon || !addon.isAltTabWindow) return true;
+    return addon.isAltTabWindow(this.id);
+  }
+
   toggleTransparency(toggle: boolean) {
     if (!addon || !addon.toggleWindowTransparency) return;
     addon.toggleWindowTransparency(this.id, toggle);
